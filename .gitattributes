@@ -1,0 +1,33 @@
+# @file Configuration for Git Attributes.
+#
+# @see https://git-scm.com/docs/gitattributes
+# @version 1.0.0
+
+# Normalize line endings for all text files
+* text=auto eol=lf
+
+# JavaScript / TypeScript
+*.js  text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.ts  text eol=lf
+*.tsx text eol=lf
+*.mts text eol=lf
+*.cts text eol=lf
+
+# Config and markup files
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.sh    text eol=lf
+
+# Images and binary assets
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
