@@ -348,6 +348,8 @@ const JSDOC_CONFIGURATION = {
           'IterableIterator',
           'Generator',
           'AsyncIterator',
+          'BufferSource',
+          'ArrayBufferView',
         ],
       },
     ],
