@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2024"
+    ],
+    "allowJs": true,
+    "paths": {
+      "IPCClient": ["./source/core"],
+      "#shared/*": ["./source/shared/*/index.mjs"],
+    }
+  },
+  "include": [
+    "source/**/*"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/coverage",
+    "**/.turbo",
+    "**/.next"
+  ],
+}

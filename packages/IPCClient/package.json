@@ -1,0 +1,55 @@
+{
+  "name": "@boo-labs/ipc-client",
+  "version": "0.0.0",
+  "description": "Client-side IPC for @boo-labs/server over WebSocket.",
+  "keywords": [
+    "ipc",
+    "websocket",
+    "client",
+    "zero-dependency",
+    "esm"
+  ],
+  "homepage": "https://github.com/vgbr-dev/boo-labs#readme",
+  "bugs": {
+    "url": "https://github.com/vgbr-dev/boo-labs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vgbr-dev/boo-labs.git",
+    "directory": "packages/ipc-client"
+  },
+  "files": [
+    "source",
+    "types",
+    "index.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": {
+    "name": "Victor Giovanni Beltrán Rodríguez",
+    "email": "vgbr.dev@gmail.com",
+    "url": "https://vgbr-dev.blogspot.com"
+  },
+  "type": "module",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./index.mjs",
+      "default": "./index.mjs"
+    }
+  },
+  "imports": {
+    "#shared/*": "./source/shared/*/index.mjs",
+    "#core/*": "./source/core/*/index.mjs"
+  },
+  "scripts": {
+    "test": "node --env-file=.env.test --test test/**/*.test.mjs",
+    "lint": "eslint .",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
