@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Validate staged files before creating a commit.
+npx --no lint-staged

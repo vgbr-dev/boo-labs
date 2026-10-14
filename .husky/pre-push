@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Validate the project before pushing changes.
+npm test
