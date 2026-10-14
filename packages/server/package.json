@@ -1,0 +1,73 @@
+{
+  "name": "@boo-labs/server",
+  "version": "0.0.0",
+  "description": "A zero-dependency, frameworkless HTTP server for Node.js, built around Clean Architecture principles.",
+  "keywords": [
+    "http-server",
+    "nodejs",
+    "zero-dependency",
+    "frameworkless",
+    "esm",
+    "router",
+    "middleware",
+    "clean-architecture"
+  ],
+  "homepage": "https://github.com/vgbr-dev/boo-labs#readme",
+  "bugs": {
+    "url": "https://github.com/vgbr-dev/boo-labs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vgbr-dev/boo-labs.git",
+    "directory": "packages/server"
+  },
+  "files": [
+    "source",
+    "types",
+    "index.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": {
+    "name": "Victor Giovanni Beltrán Rodríguez",
+    "email": "vgbr.dev@gmail.com",
+    "url": "https://vgbr-dev.blogspot.com"
+  },
+  "type": "module",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./index.mjs",
+      "default": "./index.mjs"
+    }
+  },
+  "imports": {
+    "#Server": "./source/application/Server/index.mjs",
+    "#Kernel": "./source/application/Kernel/index.mjs",
+    "#Exchange": "./source/core/Exchange/index.mjs",
+    "#IPCMain": "./source/core/IPCMain/IPCMain.mjs",
+    "#ServerOptions/*": "./source/application/configurations/ServerConfiguration/Options/*/index.mjs",
+    "#configurations/*": "./source/application/configurations/*/index.mjs",
+    "#Request": "./source/core/Request/index.mjs",
+    "#Response": "./source/core/Response/index.mjs",
+    "#use-cases/*": "./source/application/use-cases/*/index.mjs",
+    "#value-objects/*": "./source/core/value-objects/*/index.mjs",
+    "#adapters/*": "./source/infrastructure/adapters/*/index.mjs",
+    "#resolvers/*": "./source/application/resolvers/*/index.mjs",
+    "#routing/*": "./source/core/routing/*/index.mjs",
+    "#ExchangeLayerBuilder": "./source/core/ExchangeLayerBuilder/index.mjs",
+    "#middlewares/*": "./source/core/middlewares/*/index.mjs",
+    "#EventSystem": "./source/core/EventSystem/index.mjs",
+    "#shared/*": "./source/shared/*/index.mjs"
+  },
+  "scripts": {
+    "test": "node --env-file=.env.test --test test/**/*.test.mjs",
+    "lint": "eslint .",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2024"
+    ],
+    "allowJs": true,
+    "paths": {
+      "#Server": ["./source/application/Server/index.mjs"],
+      "#Kernel": ["./source/application/Kernel/index.mjs"],
+      "#Exchange": ["./source/core/Exchange/index.mjs"],
+      "#IPCMain": ["./source/core/IPCMain/IPCMain.mjs"],
+      "#ServerOptions/*": ["./source/application/configurations/ServerConfiguration/Options/*/index.mjs"],
+      "#configurations/*": ["./source/application/configurations/*/index.mjs"],
+      "#Request": ["./source/core/Request/index.mjs"],
+      "#Response": ["./source/core/Response/index.mjs"],
+      "#use-cases/*": ["./source/application/use-cases/*/index.mjs"],
+      "#value-objects/*": ["./source/core/value-objects/*/index.mjs"],
+      "#adapters/*": ["./source/infrastructure/adapters/*/index.mjs"],
+      "#resolvers/*": ["./source/application/resolvers/*/index.mjs"],
+      "#routing/*": ["./source/core/routing/*/index.mjs"],
+      "#ExchangeLayerBuilder": ["./source/core/ExchangeLayerBuilder/index.mjs"],
+      "#middlewares/*": ["./source/core/middlewares/*/index.mjs"],
+      "#EventSystem": ["./source/core/EventSystem/index.mjs"],
+      "#shared/*": ["./source/shared/*/index.mjs"],
+    }
+  },
+  "include": [
+    "source/**/*"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/coverage",
+    "**/.turbo",
+    "**/.next"
+  ],
+}
