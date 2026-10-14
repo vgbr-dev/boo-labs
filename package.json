@@ -1,0 +1,48 @@
+{
+  "name": "boo-labs-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zero-dependency Node.js packages for server and IPC development.",
+  "keywords": [
+    "nodejs",
+    "zero-dependency",
+    "monorepo"
+  ],
+  "homepage": "https://github.com/vgbr-dev/boo-labs#readme",
+  "bugs": {
+    "url": "https://github.com/vgbr-dev/boo-labs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vgbr-dev/boo-labs.git"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@eslint/compat": "^2.1.0",
+    "@eslint/eslintrc": "^3.3.6",
+    "@eslint/js": "^10.0.1",
+    "cross-env": "^10.1.0",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-node": "^0.4.0",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jsdoc": "^63.0.13",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "prettier": "^3.9.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
