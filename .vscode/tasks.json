@@ -1,0 +1,100 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MongoDB: Start MongoDB Server",
+      "type": "shell",
+      "command": "mongod",
+      "args": [
+        "--quiet"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Waiting for connections"
+        }
+      },
+      "presentation": {
+        "reveal": "never",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Playground: Run Scratch",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "--watch",
+        "--env-file=.env",
+        "playground/scratch.mjs",
+        "--host",
+      ],
+      "options": {
+        "env": {
+          "NODE_ENV": "development",
+        }
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Playground: New Session",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/playground/scripts/playground-session.mjs"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Playground: Tests",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "--test",
+        "playground/drafts/**/*.test.mjs"
+      ],
+      "options": {
+        "env": {
+          "NODE_ENV": "test",
+        }
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    }
+  ]
+}

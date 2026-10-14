@@ -1,0 +1,104 @@
+{
+  // » Editor Settings
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.formatOnSave": false,
+  "editor.renderWhitespace": "none",
+
+  // » ESLint (optimal configuration)
+  "eslint.enable": true,
+  "eslint.run": "onType",
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/bazel-out": true,
+    "**/dist": true
+  },
+  "[markdown]": {
+    "editor.renderWhitespace": "all",
+    "editor.acceptSuggestionOnEnter": "smart",
+    "editor.parameterHints.enabled": true,
+    "editor.snippetSuggestions": "inline",
+    "editor.quickSuggestions": {
+      "comments": "inline",
+      "strings": "inline",
+      "other": "inline"
+    },
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    ".husky": true,
+    ".github": true,
+    "node_modules": true,
+
+    /* » FILES */
+
+    // » Editorconfig Configuration Files
+    ".editorconfig": true,
+
+    // » Eslint Configuration Files
+    "eslint.config{,.js,.mjs,.cjs,.ts,.mts,.cts}": true,
+    ".eslintignore": true,
+
+    // » Git Configuration Files
+    ".gitattributes": true,
+    ".gitconfig": true,
+    ".gitignore": true,
+
+    // » Lint-staged Configuration Files
+    "lint-staged.config{.js,.mjs,.cjs,.ts,.mts,.cts}": true,
+
+    // » Prettier Configuration Files
+    "prettier.config{,.js,.ts,.mjs,.mts,.cjs,.cts}": true,
+    ".prettierignore": true,
+
+    // » Commitlint Configuration Files
+    "commitlint.config{.js,.cjs,.mjs,.ts,.cts}": true,
+
+    // » Stylelint Configuration Files
+    ".stylelintrc{,.js,.mjs,.cjs,.yml,.yaml,.json}": true,
+
+    // » Vite Configuration Files
+    "vite.config{,.js,.mjs,.cjs,.yml,.yaml,.json}": true,
+
+    // » Forge Configuration Files
+    "forge.config{,.js,.mjs,.cjs,.yml,.yaml,.json}": true,
+
+    // » JSDoc Configuration Files
+    "jsdoc.config{,.js,.mjs,.cjs,.yml,.yaml,.json}": true,
+
+    // "jsconfig.json": true,
+
+    // » NPM Configuration Files
+    ".npmrc": true,
+    ".nvmrc": true,
+    ".npmignore": true,
+    "package-lock.json": true,
+    "package.json": false,
+
+    // » YARN Configuration Files
+    "yarn.lock": true,
+
+    "README.md": false,
+    "LICENSE{,.md,.txt}": true,
+    /**/
+  },
+  "files.associations": {
+    ".todos": "markdown",
+    ".babelrc": "jsonc",
+    ".eslintrc": "jsonc",
+    ".eslintrc.json": "jsonc",
+    ".prettierrc": "jsonc",
+    ".stylelintrc": "json",
+    ".eslintignore": "ignore",
+    ".prettierignore": "ignore",
+    ".gitignore": "ignore",
+    ".gitkeep": "markdown",
+  },
+
+}
