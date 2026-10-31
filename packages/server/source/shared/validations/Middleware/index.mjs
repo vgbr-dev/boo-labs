@@ -12,6 +12,20 @@
 import Validation from '#shared/outcome/Validation';
 import MiddlewareError from '#shared/errors/MiddlewareError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates a middleware function.
@@ -20,7 +34,8 @@ import MiddlewareError from '#shared/errors/MiddlewareError';
  * `context` and `next`.
  *
  * @param {unknown} middleware - Middleware function to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<MiddlewareError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateMiddleware((context, next) => {
@@ -43,31 +58,25 @@ import MiddlewareError from '#shared/errors/MiddlewareError';
  */
 export function validateMiddleware(middleware) {
   if (typeof middleware !== 'function') {
-    return Validation.failure({
-      error: MiddlewareError,
-      code: 'INVALID_MIDDLEWARE_TYPE',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new MiddlewareError('INVALID_MIDDLEWARE_TYPE', {
         values: {
           expected: 'function',
           received: typeof middleware,
         },
-      },
-    });
+      }),
+    );
   }
 
   if (middleware.length !== 2) {
-    return Validation.failure({
-      error: MiddlewareError,
-      code: 'INVALID_MIDDLEWARE_ARITY',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new MiddlewareError('INVALID_MIDDLEWARE_ARITY', {
         values: {
           expected: 2,
           received: middleware.length,
         },
-      },
-    });
+      }),
+    );
   }
 
   return Validation.success();
@@ -79,6 +88,7 @@ export function validateMiddleware(middleware) {
  * @param {unknown} middleware - Middleware function to validate.
  * @throws {MiddlewareError} If the middleware is not a function.
  * @throws {MiddlewareError} If the middleware does not declare exactly two parameters.
+ *
  * @example
  * ```js
  * assertMiddleware((context, next) => {
@@ -98,7 +108,8 @@ export function assertMiddleware(middleware) {
  * Validates an array of middleware functions.
  *
  * @param {unknown} middlewares - Middleware functions to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<MiddlewareError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateMiddlewares([
@@ -112,17 +123,14 @@ export function assertMiddleware(middleware) {
  */
 export function validateMiddlewares(middlewares) {
   if (!Array.isArray(middlewares)) {
-    return Validation.failure({
-      error: MiddlewareError,
-      code: 'INVALID_MIDDLEWARES_TYPE',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new MiddlewareError('INVALID_MIDDLEWARES_TYPE', {
         values: {
           expected: 'array',
           received: typeof middlewares,
         },
-      },
-    });
+      }),
+    );
   }
 
   for (const middleware of middlewares) {
@@ -143,6 +151,7 @@ export function validateMiddlewares(middlewares) {
  * @throws {MiddlewareError} If the middleware collection is not an array.
  * @throws {MiddlewareError} If a middleware is not a function.
  * @throws {MiddlewareError} If a middleware does not declare exactly two parameters.
+ *
  * @example
  * ```js
  * assertMiddlewares([

@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Minimum valid TCP port.
@@ -42,6 +56,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates listen options.
  *
@@ -54,7 +69,8 @@ function isPlainObject(value) {
  * 5. `backlog`, if present, must be a number.
  *
  * @param {unknown} options - Listen options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateListenOptions({ port: 3000 });
@@ -77,33 +93,31 @@ export function validateListenOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_LISTEN_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_LISTEN_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('port' in options) {
     const { port } = options;
 
     if (typeof port !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_PORT_TYPE',
-        custom: true,
-        options: { values: { received: typeof port } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_PORT_TYPE', {
+          values: { received: typeof port },
+        }),
+      );
     }
 
     if (!Number.isInteger(port) || port < MIN_PORT || port > MAX_PORT) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_PORT_RANGE',
-        custom: true,
-        options: { details: { port } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_PORT_RANGE', {
+          values: { port },
+          details: { port },
+        }),
+      );
     }
   }
 
@@ -111,21 +125,19 @@ export function validateListenOptions(options) {
     const { host } = options;
 
     if (typeof host !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_HOST_TYPE',
-        custom: true,
-        options: { values: { received: typeof host } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_HOST_TYPE', {
+          values: { received: typeof host },
+        }),
+      );
     }
 
     if (host.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_HOST_VALUE',
-        custom: true,
-        options: { details: { host } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_HOST_VALUE', {
+          details: { host },
+        }),
+      );
     }
   }
 
@@ -133,21 +145,20 @@ export function validateListenOptions(options) {
     const { backlog } = options;
 
     if (typeof backlog !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_BACKLOG_TYPE',
-        custom: true,
-        options: { values: { received: typeof backlog } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_BACKLOG_TYPE', {
+          values: { received: typeof backlog },
+        }),
+      );
     }
 
     if (!Number.isInteger(backlog) || backlog <= 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_BACKLOG_RANGE',
-        custom: true,
-        options: { details: { backlog } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_BACKLOG_RANGE', {
+          values: { backlog },
+          details: { backlog },
+        }),
+      );
     }
   }
 
@@ -164,6 +175,7 @@ export function validateListenOptions(options) {
  * @throws {ServerConfigurationError} If `host` is not a string.
  * @throws {ServerConfigurationError} If `host` is an empty string.
  * @throws {ServerConfigurationError} If `backlog` is not a number.
+ *
  * @example
  * ```js
  * assertListenOptions({ port: 3000, host: '127.0.0.1' });

@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Valid values for the SameSite cookie attribute.
@@ -57,6 +71,7 @@ function everyNonEmptyString(values) {
   return values.every(isNonEmptyString);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates cookie session options.
  *
@@ -78,7 +93,8 @@ function everyNonEmptyString(values) {
  *
  * @param {unknown} options - Cookie session options to validate.
  * @param {boolean} [hasParser] - Whether a cookie parser is configured.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateCookieSessionOptions({ keys: ['secret'] }, true);
@@ -101,99 +117,83 @@ export function validateCookieSessionOptions(options, hasParser) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_COOKIE_SESSION_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_COOKIE_SESSION_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if (hasParser !== true) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'COOKIE_SESSION_REQUIRES_COOKIE_PARSER',
-      custom: true,
-    });
+    return Validation.failure(
+      new ServerConfigurationError('COOKIE_SESSION_REQUIRES_COOKIE_PARSER'),
+    );
   }
 
   if ('name' in options) {
     const { name } = options;
 
     if (typeof name !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_NAME_TYPE',
-        custom: true,
-        options: { values: { received: typeof name } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_NAME_TYPE', {
+          values: { received: typeof name },
+        }),
+      );
     }
 
     if (name.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_NAME_VALUE',
-        custom: true,
-        options: { details: { name } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_NAME_VALUE', {
+          details: { name },
+        }),
+      );
     }
   }
 
   const { keys } = options;
 
   if (keys === undefined) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'MISSING_COOKIE_SESSION_KEYS',
-      custom: true,
-    });
+    return Validation.failure(new ServerConfigurationError('MISSING_COOKIE_SESSION_KEYS'));
   }
 
   if (!Array.isArray(keys)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_COOKIE_SESSION_KEYS_TYPE',
-      custom: true,
-      options: { values: { received: typeof keys } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_COOKIE_SESSION_KEYS_TYPE', {
+        values: { received: typeof keys },
+      }),
+    );
   }
 
   if (keys.length === 0) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'MISSING_COOKIE_SESSION_KEYS',
-      custom: true,
-    });
+    return Validation.failure(new ServerConfigurationError('MISSING_COOKIE_SESSION_KEYS'));
   }
 
   if (!everyNonEmptyString(keys)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_COOKIE_SESSION_KEYS_ITEM',
-      custom: true,
-      options: { details: { keys } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_COOKIE_SESSION_KEYS_ITEM', {
+        details: { keys },
+      }),
+    );
   }
 
   if ('maxAge' in options) {
     const { maxAge } = options;
 
     if (typeof maxAge !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_MAX_AGE_TYPE',
-        custom: true,
-        options: { values: { received: typeof maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_MAX_AGE_TYPE', {
+          values: { received: typeof maxAge },
+        }),
+      );
     }
 
     if (!Number.isInteger(maxAge) || maxAge <= 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_MAX_AGE_RANGE',
-        custom: true,
-        options: { details: { maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_MAX_AGE_RANGE', {
+          values: { maxAge },
+          details: { maxAge },
+        }),
+      );
     }
   }
 
@@ -201,21 +201,19 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { path } = options;
 
     if (typeof path !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_PATH_TYPE',
-        custom: true,
-        options: { values: { received: typeof path } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_PATH_TYPE', {
+          values: { received: typeof path },
+        }),
+      );
     }
 
     if (path.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_PATH_VALUE',
-        custom: true,
-        options: { details: { path } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_PATH_VALUE', {
+          details: { path },
+        }),
+      );
     }
   }
 
@@ -223,21 +221,19 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { domain } = options;
 
     if (typeof domain !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_DOMAIN_TYPE',
-        custom: true,
-        options: { values: { received: typeof domain } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_DOMAIN_TYPE', {
+          values: { received: typeof domain },
+        }),
+      );
     }
 
     if (domain.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_DOMAIN_VALUE',
-        custom: true,
-        options: { details: { domain } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_DOMAIN_VALUE', {
+          details: { domain },
+        }),
+      );
     }
   }
 
@@ -245,12 +241,11 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { secure } = options;
 
     if (typeof secure !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_SECURE_TYPE',
-        custom: true,
-        options: { values: { received: typeof secure } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_SECURE_TYPE', {
+          values: { received: typeof secure },
+        }),
+      );
     }
   }
 
@@ -258,12 +253,11 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { httpOnly } = options;
 
     if (typeof httpOnly !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_HTTP_ONLY_TYPE',
-        custom: true,
-        options: { values: { received: typeof httpOnly } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_HTTP_ONLY_TYPE', {
+          values: { received: typeof httpOnly },
+        }),
+      );
     }
   }
 
@@ -271,12 +265,12 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { sameSite } = options;
 
     if (sameSite !== undefined && !SAME_SITE_VALUES.includes(String(sameSite))) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_SAME_SITE_VALUE',
-        custom: true,
-        options: { details: { sameSite } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_SAME_SITE_VALUE', {
+          values: { received: sameSite },
+          details: { sameSite },
+        }),
+      );
     }
   }
 
@@ -284,12 +278,11 @@ export function validateCookieSessionOptions(options, hasParser) {
     const { overwrite } = options;
 
     if (typeof overwrite !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_SESSION_OVERWRITE_TYPE',
-        custom: true,
-        options: { values: { received: typeof overwrite } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_SESSION_OVERWRITE_TYPE', {
+          values: { received: typeof overwrite },
+        }),
+      );
     }
   }
 
@@ -298,11 +291,7 @@ export function validateCookieSessionOptions(options, hasParser) {
   const effectiveSecure = options.secure ?? true;
 
   if (effectiveSameSite === 'None' && effectiveSecure === false) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'COOKIE_SESSION_NONE_REQUIRES_SECURE',
-      custom: true,
-    });
+    return Validation.failure(new ServerConfigurationError('COOKIE_SESSION_NONE_REQUIRES_SECURE'));
   }
 
   return Validation.success();
@@ -318,6 +307,7 @@ export function validateCookieSessionOptions(options, hasParser) {
  * @throws {ServerConfigurationError} If `keys` is missing or invalid.
  * @throws {ServerConfigurationError} If any other option is invalid.
  * @throws {ServerConfigurationError} If `sameSite: 'None'` is used without `secure: true`.
+ *
  * @example
  * ```js
  * assertCookieSessionOptions({ keys: ['secret'] }, true);

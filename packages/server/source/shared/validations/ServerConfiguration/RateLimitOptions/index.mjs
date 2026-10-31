@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Minimum valid HTTP status code for a rate-limit rejection.
@@ -43,6 +57,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates rate limit options.
  *
@@ -61,7 +76,8 @@ function isPlainObject(value) {
  * 11. `legacyHeaders`, if present, must be a boolean.
  *
  * @param {unknown} options - Rate limit options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateRateLimitOptions({ windowMs: 60_000, max: 100 });
@@ -84,33 +100,31 @@ export function validateRateLimitOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_RATE_LIMIT_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_RATE_LIMIT_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('windowMs' in options) {
     const { windowMs } = options;
 
     if (typeof windowMs !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_WINDOW_MS_TYPE',
-        custom: true,
-        options: { values: { received: typeof windowMs } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_WINDOW_MS_TYPE', {
+          values: { received: typeof windowMs },
+        }),
+      );
     }
 
     if (!Number.isInteger(windowMs) || windowMs <= 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_WINDOW_MS_RANGE',
-        custom: true,
-        options: { details: { windowMs } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_WINDOW_MS_RANGE', {
+          values: { windowMs },
+          details: { windowMs },
+        }),
+      );
     }
   }
 
@@ -118,21 +132,20 @@ export function validateRateLimitOptions(options) {
     const { max } = options;
 
     if (typeof max !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_MAX_TYPE',
-        custom: true,
-        options: { values: { received: typeof max } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_MAX_TYPE', {
+          values: { received: typeof max },
+        }),
+      );
     }
 
     if (!Number.isInteger(max) || max <= 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_MAX_RANGE',
-        custom: true,
-        options: { details: { max } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_MAX_RANGE', {
+          values: { max },
+          details: { max },
+        }),
+      );
     }
   }
 
@@ -140,12 +153,11 @@ export function validateRateLimitOptions(options) {
     const { statusCode } = options;
 
     if (typeof statusCode !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_STATUS_CODE_TYPE',
-        custom: true,
-        options: { values: { received: typeof statusCode } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_STATUS_CODE_TYPE', {
+          values: { received: typeof statusCode },
+        }),
+      );
     }
 
     if (
@@ -153,12 +165,12 @@ export function validateRateLimitOptions(options) {
       statusCode < MIN_STATUS_CODE ||
       statusCode > MAX_STATUS_CODE
     ) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_STATUS_CODE_RANGE',
-        custom: true,
-        options: { details: { statusCode } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_STATUS_CODE_RANGE', {
+          values: { statusCode },
+          details: { statusCode },
+        }),
+      );
     }
   }
 
@@ -166,12 +178,11 @@ export function validateRateLimitOptions(options) {
     const { message } = options;
 
     if (!isPlainObject(message)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_MESSAGE_TYPE',
-        custom: true,
-        options: { values: { received: typeof message } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_MESSAGE_TYPE', {
+          values: { received: typeof message },
+        }),
+      );
     }
   }
 
@@ -179,12 +190,11 @@ export function validateRateLimitOptions(options) {
     const { standardHeaders } = options;
 
     if (typeof standardHeaders !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_STANDARD_HEADERS_TYPE',
-        custom: true,
-        options: { values: { received: typeof standardHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_STANDARD_HEADERS_TYPE', {
+          values: { received: typeof standardHeaders },
+        }),
+      );
     }
   }
 
@@ -192,12 +202,11 @@ export function validateRateLimitOptions(options) {
     const { legacyHeaders } = options;
 
     if (typeof legacyHeaders !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_RATE_LIMIT_LEGACY_HEADERS_TYPE',
-        custom: true,
-        options: { values: { received: typeof legacyHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_RATE_LIMIT_LEGACY_HEADERS_TYPE', {
+          values: { received: typeof legacyHeaders },
+        }),
+      );
     }
   }
 
@@ -215,6 +224,7 @@ export function validateRateLimitOptions(options) {
  * @throws {ServerConfigurationError} If `message` is not a plain object.
  * @throws {ServerConfigurationError} If `standardHeaders` is not a boolean.
  * @throws {ServerConfigurationError} If `legacyHeaders` is not a boolean.
+ *
  * @example
  * ```js
  * assertRateLimitOptions({ windowMs: 60_000, max: 100 });

@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Minimum valid HTTP status code for a successful preflight response.
@@ -65,6 +79,7 @@ function everyNonEmptyString(values) {
   return values.every(isNonEmptyString);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates CORS options.
  *
@@ -82,7 +97,8 @@ function everyNonEmptyString(values) {
  * 10. `optionsSuccessStatus`, if present, must be an integer between 100 and 599.
  *
  * @param {unknown} options - CORS options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateCORSOptions({ origin: true });
@@ -105,12 +121,11 @@ export function validateCORSOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_CORS_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_CORS_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('origin' in options) {
@@ -123,20 +138,18 @@ export function validateCORSOptions(options) {
 
     if (!isValidOriginType) {
       if (Array.isArray(origin)) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_CORS_ORIGIN_ITEM',
-          custom: true,
-          options: { details: { origin } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_CORS_ORIGIN_ITEM', {
+            details: { origin },
+          }),
+        );
       }
 
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_ORIGIN_TYPE',
-        custom: true,
-        options: { values: { received: typeof origin } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_ORIGIN_TYPE', {
+          values: { received: typeof origin },
+        }),
+      );
     }
   }
 
@@ -144,21 +157,19 @@ export function validateCORSOptions(options) {
     const { methods } = options;
 
     if (!Array.isArray(methods)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_METHODS_TYPE',
-        custom: true,
-        options: { values: { received: typeof methods } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_METHODS_TYPE', {
+          values: { received: typeof methods },
+        }),
+      );
     }
 
     if (!everyNonEmptyString(methods)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_METHODS_ITEM',
-        custom: true,
-        options: { details: { methods } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_METHODS_ITEM', {
+          details: { methods },
+        }),
+      );
     }
   }
 
@@ -166,21 +177,19 @@ export function validateCORSOptions(options) {
     const { allowedHeaders } = options;
 
     if (!Array.isArray(allowedHeaders)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_ALLOWED_HEADERS_TYPE',
-        custom: true,
-        options: { values: { received: typeof allowedHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_ALLOWED_HEADERS_TYPE', {
+          values: { received: typeof allowedHeaders },
+        }),
+      );
     }
 
     if (!everyNonEmptyString(allowedHeaders)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_ALLOWED_HEADERS_ITEM',
-        custom: true,
-        options: { details: { allowedHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_ALLOWED_HEADERS_ITEM', {
+          details: { allowedHeaders },
+        }),
+      );
     }
   }
 
@@ -188,21 +197,19 @@ export function validateCORSOptions(options) {
     const { exposedHeaders } = options;
 
     if (!Array.isArray(exposedHeaders)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_EXPOSED_HEADERS_TYPE',
-        custom: true,
-        options: { values: { received: typeof exposedHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_EXPOSED_HEADERS_TYPE', {
+          values: { received: typeof exposedHeaders },
+        }),
+      );
     }
 
     if (!everyNonEmptyString(exposedHeaders)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_EXPOSED_HEADERS_ITEM',
-        custom: true,
-        options: { details: { exposedHeaders } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_EXPOSED_HEADERS_ITEM', {
+          details: { exposedHeaders },
+        }),
+      );
     }
   }
 
@@ -210,12 +217,11 @@ export function validateCORSOptions(options) {
     const { credentials } = options;
 
     if (typeof credentials !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_CREDENTIALS_TYPE',
-        custom: true,
-        options: { values: { received: typeof credentials } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_CREDENTIALS_TYPE', {
+          values: { received: typeof credentials },
+        }),
+      );
     }
   }
 
@@ -223,21 +229,20 @@ export function validateCORSOptions(options) {
     const { maxAge } = options;
 
     if (typeof maxAge !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_MAX_AGE_TYPE',
-        custom: true,
-        options: { values: { received: typeof maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_MAX_AGE_TYPE', {
+          values: { received: typeof maxAge },
+        }),
+      );
     }
 
     if (!Number.isInteger(maxAge) || maxAge < 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_MAX_AGE_RANGE',
-        custom: true,
-        options: { details: { maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_MAX_AGE_RANGE', {
+          values: { maxAge },
+          details: { maxAge },
+        }),
+      );
     }
   }
 
@@ -245,12 +250,11 @@ export function validateCORSOptions(options) {
     const { preflightContinue } = options;
 
     if (typeof preflightContinue !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_PREFLIGHT_CONTINUE_TYPE',
-        custom: true,
-        options: { values: { received: typeof preflightContinue } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_PREFLIGHT_CONTINUE_TYPE', {
+          values: { received: typeof preflightContinue },
+        }),
+      );
     }
   }
 
@@ -258,12 +262,11 @@ export function validateCORSOptions(options) {
     const { optionsSuccessStatus } = options;
 
     if (typeof optionsSuccessStatus !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_OPTIONS_SUCCESS_STATUS_TYPE',
-        custom: true,
-        options: { values: { received: typeof optionsSuccessStatus } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_OPTIONS_SUCCESS_STATUS_TYPE', {
+          values: { received: typeof optionsSuccessStatus },
+        }),
+      );
     }
 
     if (
@@ -271,12 +274,12 @@ export function validateCORSOptions(options) {
       optionsSuccessStatus < MIN_OPTIONS_SUCCESS_STATUS ||
       optionsSuccessStatus > MAX_OPTIONS_SUCCESS_STATUS
     ) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CORS_OPTIONS_SUCCESS_STATUS_RANGE',
-        custom: true,
-        options: { details: { optionsSuccessStatus } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CORS_OPTIONS_SUCCESS_STATUS_RANGE', {
+          values: { optionsSuccessStatus },
+          details: { optionsSuccessStatus },
+        }),
+      );
     }
   }
 
@@ -296,6 +299,7 @@ export function validateCORSOptions(options) {
  * @throws {ServerConfigurationError} If `maxAge` is not a non-negative integer.
  * @throws {ServerConfigurationError} If `preflightContinue` is not a boolean.
  * @throws {ServerConfigurationError} If `optionsSuccessStatus` is not an integer between 100 and 599.
+ *
  * @example
  * ```js
  * assertCORSOptions({ origin: true, credentials: true });

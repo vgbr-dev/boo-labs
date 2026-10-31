@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Determines whether a value is a non-null plain object.
@@ -25,6 +39,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates request options.
  *
@@ -36,7 +51,7 @@ function isPlainObject(value) {
  * 4. `trustProxy`, if defined, must be a boolean or a non-negative integer.
  *
  * @param {unknown} options - Request options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
  */
 export function validateRequestOptions(options) {
   if (options === undefined) {
@@ -44,12 +59,11 @@ export function validateRequestOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_REQUEST_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_REQUEST_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('bodyLimit' in options) {
@@ -57,21 +71,20 @@ export function validateRequestOptions(options) {
 
     if (bodyLimit !== undefined) {
       if (typeof bodyLimit !== 'number') {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_BODY_LIMIT_TYPE',
-          custom: true,
-          options: { values: { received: typeof bodyLimit } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_BODY_LIMIT_TYPE', {
+            values: { received: typeof bodyLimit },
+          }),
+        );
       }
 
       if (!Number.isSafeInteger(bodyLimit) || bodyLimit <= 0) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_BODY_LIMIT_RANGE',
-          custom: true,
-          options: { details: { bodyLimit } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_BODY_LIMIT_RANGE', {
+            values: { bodyLimit },
+            details: { bodyLimit },
+          }),
+        );
       }
     }
   }
@@ -84,21 +97,20 @@ export function validateRequestOptions(options) {
       const isNumber = typeof trustProxy === 'number';
 
       if (!isBoolean && !isNumber) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_TRUST_PROXY_TYPE',
-          custom: true,
-          options: { values: { received: typeof trustProxy } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_TRUST_PROXY_TYPE', {
+            values: { received: typeof trustProxy },
+          }),
+        );
       }
 
       if (isNumber && (!Number.isInteger(trustProxy) || trustProxy < 0)) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_TRUST_PROXY_RANGE',
-          custom: true,
-          options: { details: { trustProxy } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_TRUST_PROXY_RANGE', {
+            values: { trustProxy },
+            details: { trustProxy },
+          }),
+        );
       }
     }
   }
@@ -115,6 +127,7 @@ export function validateRequestOptions(options) {
  * @throws {ServerConfigurationError} If `bodyLimit` is defined and is not a positive safe integer.
  * @throws {ServerConfigurationError} If `trustProxy` is defined and is not a boolean or number.
  * @throws {ServerConfigurationError} If numeric `trustProxy` is defined and is negative or not an integer.
+ *
  * @example
  * ```js
  * assertRequestOptions({

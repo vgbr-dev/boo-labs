@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Determines whether a value is a non-null plain object.
@@ -25,6 +39,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates response options.
  *
@@ -36,7 +51,8 @@ function isPlainObject(value) {
  * 4. `defaultCharset`, if defined, must be a non-empty string.
  *
  * @param {unknown} options - Response options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateResponseOptions({ etag: true });
@@ -51,12 +67,11 @@ export function validateResponseOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_RESPONSE_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_RESPONSE_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('etag' in options) {
@@ -64,12 +79,11 @@ export function validateResponseOptions(options) {
 
     if (etag !== undefined) {
       if (typeof etag !== 'boolean') {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_ETAG_TYPE',
-          custom: true,
-          options: { values: { received: typeof etag } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_ETAG_TYPE', {
+            values: { received: typeof etag },
+          }),
+        );
       }
     }
   }
@@ -79,21 +93,19 @@ export function validateResponseOptions(options) {
 
     if (defaultCharset !== undefined) {
       if (typeof defaultCharset !== 'string') {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_DEFAULT_CHARSET_TYPE',
-          custom: true,
-          options: { values: { received: typeof defaultCharset } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_DEFAULT_CHARSET_TYPE', {
+            values: { received: typeof defaultCharset },
+          }),
+        );
       }
 
       if (defaultCharset.trim().length === 0) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_DEFAULT_CHARSET_VALUE',
-          custom: true,
-          options: { details: { defaultCharset } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_DEFAULT_CHARSET_VALUE', {
+            details: { defaultCharset },
+          }),
+        );
       }
     }
   }
@@ -109,6 +121,7 @@ export function validateResponseOptions(options) {
  * @throws {ServerConfigurationError} If `etag` is defined and is not a boolean.
  * @throws {ServerConfigurationError} If `defaultCharset` is defined and is not a string.
  * @throws {ServerConfigurationError} If `defaultCharset` is defined and is an empty string.
+ *
  * @example
  * ```js
  * assertResponseOptions({ etag: true, defaultCharset: 'utf-8' });
@@ -116,6 +129,7 @@ export function validateResponseOptions(options) {
  */
 export function assertResponseOptions(options) {
   const validation = validateResponseOptions(options);
+
   if (!validation.ok) {
     throw validation.error;
   }

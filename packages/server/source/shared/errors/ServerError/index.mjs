@@ -34,7 +34,15 @@ import BaseError from '../BaseError/index.mjs';
  * 'SERVER_CLOSED' |
  * 'SERVER_ERROR' |
  * 'SERVER_INVALID_STATE_TRANSITION' |
- * 'SERVER_EXCHANGE_INIT_FAILED'
+ * 'SERVER_EXCHANGE_INIT_FAILED' |
+ * 'INVALID_ROUTER_TYPE' |
+ * 'INVALID_ROUTER_INSTANCE' |
+ * 'INVALID_SYSTEM_ERROR_HANDLER_TYPE' |
+ * 'INVALID_SYSTEM_ERROR_HANDLER_ARITY' |
+ * 'INVALID_NOT_FOUND_HANDLER_TYPE' |
+ * 'INVALID_NOT_FOUND_HANDLER_ARITY' |
+ * 'INVALID_SERVER_CONFIGURATION_TYPE' |
+ * 'INVALID_SERVER_CONFIGURATION_INSTANCE'
  * >} ServerErrorIdentifier
  */
 
@@ -88,13 +96,29 @@ class ServerError extends BaseError {
   /**
    * Collection of predefined server error messages.
    *
-   * Available error identifiers.
+   * Available error identifiers:
    *
    * - `SERVER_LISTEN_FAILED`.
    * - `SERVER_CLOSE_FAILED`.
+   * - `SERVER_ADAPTER_INIT_FAILED`.
+   * - `SERVER_ALREADY_STARTING`.
    * - `SERVER_ALREADY_LISTENING`.
+   * - `SERVER_ALREADY_STOPPING`.
    * - `SERVER_ALREADY_CLOSED`.
+   * - `SERVER_NOT_LISTENING`.
+   * - `SERVER_STOPPING`.
+   * - `SERVER_CLOSED`.
+   * - `SERVER_ERROR`.
    * - `SERVER_INVALID_STATE_TRANSITION`.
+   * - `SERVER_EXCHANGE_INIT_FAILED`.
+   * - `INVALID_ROUTER_TYPE`.
+   * - `INVALID_ROUTER_INSTANCE`.
+   * - `INVALID_SYSTEM_ERROR_HANDLER_TYPE`.
+   * - `INVALID_SYSTEM_ERROR_HANDLER_ARITY`.
+   * - `INVALID_NOT_FOUND_HANDLER_TYPE`.
+   * - `INVALID_NOT_FOUND_HANDLER_ARITY`.
+   * - `INVALID_SERVER_CONFIGURATION_TYPE`.
+   * - `INVALID_SERVER_CONFIGURATION_INSTANCE`.
    *
    * @private
    * @static
@@ -121,6 +145,28 @@ class ServerError extends BaseError {
 
     // Exchange
     ['SERVER_EXCHANGE_INIT_FAILED', 'Failed to create the exchange for the incoming request.'],
+
+    // Router
+    ['INVALID_ROUTER_TYPE', 'Expected a Router instance, received: {received}.'],
+    ['INVALID_ROUTER_INSTANCE', 'Expected a Router instance.'],
+
+    // SystemErrorHandler
+    ['INVALID_SYSTEM_ERROR_HANDLER_TYPE', 'Handler must be a function, received: {received}.'],
+    [
+      'INVALID_SYSTEM_ERROR_HANDLER_ARITY',
+      'Handler must declare 2 parameters, received: {received}.',
+    ],
+
+    // NotFoundHandler
+    ['INVALID_NOT_FOUND_HANDLER_TYPE', 'Handler must be a function, received: {received}.'],
+    ['INVALID_NOT_FOUND_HANDLER_ARITY', 'Handler must declare 1 parameter, received: {received}.'],
+
+    // ServerConfiguration
+    [
+      'INVALID_SERVER_CONFIGURATION_TYPE',
+      'Expected a ServerConfiguration instance, received: {received}.',
+    ],
+    ['INVALID_SERVER_CONFIGURATION_INSTANCE', 'Expected a ServerConfiguration instance.'],
   ]);
 }
 // ━━ EXPORT MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

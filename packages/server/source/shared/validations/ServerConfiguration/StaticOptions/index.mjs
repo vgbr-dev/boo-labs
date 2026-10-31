@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Determines whether a value is a non-null plain object.
@@ -26,6 +40,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates static middleware options.
  *
@@ -43,7 +58,8 @@ function isPlainObject(value) {
  * 10. `dotfiles`, when present, must be a boolean.
  *
  * @param {unknown} options - Static options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateStaticOptions({ root: '/var/www/public' });
@@ -66,41 +82,34 @@ export function validateStaticOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_STATIC_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_STATIC_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('root' in options === false) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'MISSING_STATIC_ROOT',
-      custom: true,
-    });
+    return Validation.failure(new ServerConfigurationError('MISSING_STATIC_ROOT'));
   }
 
   if ('root' in options) {
     const { root } = options;
 
     if (typeof root !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_ROOT_TYPE',
-        custom: true,
-        options: { values: { received: typeof root } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_ROOT_TYPE', {
+          values: { received: typeof root },
+        }),
+      );
     }
 
     if (root.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_ROOT_VALUE',
-        custom: true,
-        options: { details: { root } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_ROOT_VALUE', {
+          details: { root },
+        }),
+      );
     }
   }
 
@@ -108,22 +117,20 @@ export function validateStaticOptions(options) {
     const { index } = options;
 
     if (!Array.isArray(index)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_INDEX_TYPE',
-        custom: true,
-        options: { values: { received: typeof index } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_INDEX_TYPE', {
+          values: { received: typeof index },
+        }),
+      );
     }
 
     for (const item of index) {
       if (typeof item !== 'string' || item.length === 0) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_STATIC_INDEX_ITEM',
-          custom: true,
-          options: { details: { item } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_STATIC_INDEX_ITEM', {
+            details: { item },
+          }),
+        );
       }
     }
   }
@@ -132,54 +139,50 @@ export function validateStaticOptions(options) {
     const { maxAge } = options;
 
     if (typeof maxAge !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_MAX_AGE_TYPE',
-        custom: true,
-        options: { values: { received: typeof maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_MAX_AGE_TYPE', {
+          values: { received: typeof maxAge },
+        }),
+      );
     }
 
     if (!Number.isInteger(maxAge) || maxAge < 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_MAX_AGE_VALUE',
-        custom: true,
-        options: { details: { maxAge } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_MAX_AGE_VALUE', {
+          values: { maxAge },
+          details: { maxAge },
+        }),
+      );
     }
   }
 
   if ('etag' in options) {
     if (typeof options.etag !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_ETAG_TYPE',
-        custom: true,
-        options: { values: { received: typeof options.etag } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_ETAG_TYPE', {
+          values: { received: typeof options.etag },
+        }),
+      );
     }
   }
 
   if ('lastModified' in options) {
     if (typeof options.lastModified !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_LAST_MODIFIED_TYPE',
-        custom: true,
-        options: { values: { received: typeof options.lastModified } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_LAST_MODIFIED_TYPE', {
+          values: { received: typeof options.lastModified },
+        }),
+      );
     }
   }
 
   if ('fallthrough' in options) {
     if (typeof options.fallthrough !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_FALLTHROUGH_TYPE',
-        custom: true,
-        options: { values: { received: typeof options.fallthrough } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_FALLTHROUGH_TYPE', {
+          values: { received: typeof options.fallthrough },
+        }),
+      );
     }
   }
 
@@ -187,34 +190,31 @@ export function validateStaticOptions(options) {
     const { extensions } = options;
 
     if (!Array.isArray(extensions)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_EXTENSIONS_TYPE',
-        custom: true,
-        options: { values: { received: typeof extensions } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_EXTENSIONS_TYPE', {
+          values: { received: typeof extensions },
+        }),
+      );
     }
 
     for (const item of extensions) {
       if (typeof item !== 'string' || item.length === 0) {
-        return Validation.failure({
-          error: ServerConfigurationError,
-          code: 'INVALID_STATIC_EXTENSIONS_ITEM',
-          custom: true,
-          options: { details: { item } },
-        });
+        return Validation.failure(
+          new ServerConfigurationError('INVALID_STATIC_EXTENSIONS_ITEM', {
+            details: { item },
+          }),
+        );
       }
     }
   }
 
   if ('dotfiles' in options) {
     if (typeof options.dotfiles !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_STATIC_DOTFILES_TYPE',
-        custom: true,
-        options: { values: { received: typeof options.dotfiles } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_STATIC_DOTFILES_TYPE', {
+          values: { received: typeof options.dotfiles },
+        }),
+      );
     }
   }
 
@@ -234,6 +234,7 @@ export function validateStaticOptions(options) {
  * @throws {ServerConfigurationError} If `fallthrough` is not a boolean.
  * @throws {ServerConfigurationError} If `extensions` is not an array of non-empty strings.
  * @throws {ServerConfigurationError} If `dotfiles` is not a boolean.
+ *
  * @example
  * ```js
  * assertStaticOptions({ root: '/var/www/public' });

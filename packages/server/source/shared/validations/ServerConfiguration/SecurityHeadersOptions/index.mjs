@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Property names recognized as security header options.
@@ -50,6 +64,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates security headers options.
  *
@@ -63,7 +78,8 @@ function isPlainObject(value) {
  * Unknown properties are ignored.
  *
  * @param {unknown} options - Security headers options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateSecurityHeadersOptions({ xFrameOptions: 'DENY' });
@@ -86,12 +102,11 @@ export function validateSecurityHeadersOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_SECURITY_HEADERS_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_SECURITY_HEADERS_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   for (const key of SECURITY_HEADER_KEYS) {
@@ -102,15 +117,12 @@ export function validateSecurityHeadersOptions(options) {
     const value = options[key];
 
     if (typeof value !== 'string' && value !== false) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_SECURITY_HEADERS_OPTION_TYPE',
-        custom: true,
-        options: {
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_SECURITY_HEADERS_OPTION_TYPE', {
           values: { key, received: typeof value },
           details: { key, value },
-        },
-      });
+        }),
+      );
     }
   }
 
@@ -123,6 +135,7 @@ export function validateSecurityHeadersOptions(options) {
  * @param {unknown} options - Security headers options to validate.
  * @throws {ServerConfigurationError} If `options` is not a plain object.
  * @throws {ServerConfigurationError} If a recognized security header option is not a string or `false`.
+ *
  * @example
  * ```js
  * assertSecurityHeadersOptions({ xFrameOptions: 'DENY' });

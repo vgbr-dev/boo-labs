@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Valid values for the SameSite cookie attribute.
@@ -56,6 +70,7 @@ function everyNonEmptyString(values) {
   return values.every(isNonEmptyString);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates CSRF options.
  *
@@ -74,7 +89,8 @@ function everyNonEmptyString(values) {
  * 11. `sameSite: 'None'` requires an effective `secure: true`.
  *
  * @param {unknown} options - CSRF options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateCSRFOptions({ cookieName: 'csrf' });
@@ -97,33 +113,30 @@ export function validateCSRFOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_CSRF_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_CSRF_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('cookieName' in options) {
     const { cookieName } = options;
 
     if (typeof cookieName !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_COOKIE_NAME_TYPE',
-        custom: true,
-        options: { values: { received: typeof cookieName } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_COOKIE_NAME_TYPE', {
+          values: { received: typeof cookieName },
+        }),
+      );
     }
 
     if (cookieName.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_COOKIE_NAME_VALUE',
-        custom: true,
-        options: { details: { cookieName } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_COOKIE_NAME_VALUE', {
+          details: { cookieName },
+        }),
+      );
     }
   }
 
@@ -131,21 +144,19 @@ export function validateCSRFOptions(options) {
     const { headerName } = options;
 
     if (typeof headerName !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_HEADER_NAME_TYPE',
-        custom: true,
-        options: { values: { received: typeof headerName } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_HEADER_NAME_TYPE', {
+          values: { received: typeof headerName },
+        }),
+      );
     }
 
     if (headerName.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_HEADER_NAME_VALUE',
-        custom: true,
-        options: { details: { headerName } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_HEADER_NAME_VALUE', {
+          details: { headerName },
+        }),
+      );
     }
   }
 
@@ -153,21 +164,19 @@ export function validateCSRFOptions(options) {
     const { safeMethods } = options;
 
     if (!Array.isArray(safeMethods)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_SAFE_METHODS_TYPE',
-        custom: true,
-        options: { values: { received: typeof safeMethods } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_SAFE_METHODS_TYPE', {
+          values: { received: typeof safeMethods },
+        }),
+      );
     }
 
     if (!everyNonEmptyString(safeMethods)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_SAFE_METHODS_ITEM',
-        custom: true,
-        options: { details: { safeMethods } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_SAFE_METHODS_ITEM', {
+          details: { safeMethods },
+        }),
+      );
     }
   }
 
@@ -175,21 +184,20 @@ export function validateCSRFOptions(options) {
     const { tokenBytes } = options;
 
     if (typeof tokenBytes !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_TOKEN_BYTES_TYPE',
-        custom: true,
-        options: { values: { received: typeof tokenBytes } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_TOKEN_BYTES_TYPE', {
+          values: { received: typeof tokenBytes },
+        }),
+      );
     }
 
     if (!Number.isInteger(tokenBytes) || tokenBytes <= 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_TOKEN_BYTES_RANGE',
-        custom: true,
-        options: { details: { tokenBytes } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_TOKEN_BYTES_RANGE', {
+          values: { tokenBytes },
+          details: { tokenBytes },
+        }),
+      );
     }
   }
 
@@ -197,21 +205,19 @@ export function validateCSRFOptions(options) {
     const { path } = options;
 
     if (typeof path !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_PATH_TYPE',
-        custom: true,
-        options: { values: { received: typeof path } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_PATH_TYPE', {
+          values: { received: typeof path },
+        }),
+      );
     }
 
     if (path.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_PATH_VALUE',
-        custom: true,
-        options: { details: { path } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_PATH_VALUE', {
+          details: { path },
+        }),
+      );
     }
   }
 
@@ -219,21 +225,19 @@ export function validateCSRFOptions(options) {
     const { domain } = options;
 
     if (typeof domain !== 'string') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_DOMAIN_TYPE',
-        custom: true,
-        options: { values: { received: typeof domain } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_DOMAIN_TYPE', {
+          values: { received: typeof domain },
+        }),
+      );
     }
 
     if (domain.length === 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_DOMAIN_VALUE',
-        custom: true,
-        options: { details: { domain } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_DOMAIN_VALUE', {
+          details: { domain },
+        }),
+      );
     }
   }
 
@@ -241,12 +245,11 @@ export function validateCSRFOptions(options) {
     const { secure } = options;
 
     if (typeof secure !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_SECURE_TYPE',
-        custom: true,
-        options: { values: { received: typeof secure } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_SECURE_TYPE', {
+          values: { received: typeof secure },
+        }),
+      );
     }
   }
 
@@ -254,12 +257,12 @@ export function validateCSRFOptions(options) {
     const { sameSite } = options;
 
     if (sameSite !== undefined && !SAME_SITE_VALUES.includes(String(sameSite))) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_CSRF_SAME_SITE_VALUE',
-        custom: true,
-        options: { details: { sameSite } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_CSRF_SAME_SITE_VALUE', {
+          values: { received: sameSite },
+          details: { sameSite },
+        }),
+      );
     }
   }
 
@@ -268,11 +271,7 @@ export function validateCSRFOptions(options) {
   const effectiveSecure = options.secure ?? true;
 
   if (effectiveSameSite === 'None' && effectiveSecure === false) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'CSRF_NONE_REQUIRES_SECURE',
-      custom: true,
-    });
+    return Validation.failure(new ServerConfigurationError('CSRF_NONE_REQUIRES_SECURE'));
   }
 
   return Validation.success();
@@ -285,6 +284,7 @@ export function validateCSRFOptions(options) {
  * @throws {ServerConfigurationError} If `options` is not a plain object.
  * @throws {ServerConfigurationError} If any option is invalid.
  * @throws {ServerConfigurationError} If `sameSite: 'None'` is used without `secure: true`.
+ *
  * @example
  * ```js
  * assertCSRFOptions({ cookieName: 'csrf' });

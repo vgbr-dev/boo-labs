@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerError from '#shared/errors/ServerError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates a not-found handler.
@@ -21,7 +35,8 @@ import ServerError from '#shared/errors/ServerError';
  * `exchange`.
  *
  * @param {unknown} handler - Handler function to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateNotFoundHandler((exchange) => {
@@ -42,31 +57,25 @@ import ServerError from '#shared/errors/ServerError';
  */
 export function validateNotFoundHandler(handler) {
   if (typeof handler !== 'function') {
-    return Validation.failure({
-      error: ServerError,
-      code: 'INVALID_NOT_FOUND_HANDLER_TYPE',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new ServerError('INVALID_NOT_FOUND_HANDLER_TYPE', {
         values: {
           expected: 'function',
           received: typeof handler,
         },
-      },
-    });
+      }),
+    );
   }
 
   if (handler.length !== 1) {
-    return Validation.failure({
-      error: ServerError,
-      code: 'INVALID_NOT_FOUND_HANDLER_ARITY',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new ServerError('INVALID_NOT_FOUND_HANDLER_ARITY', {
         values: {
           expected: 1,
           received: handler.length,
         },
-      },
-    });
+      }),
+    );
   }
 
   return Validation.success();
@@ -78,6 +87,7 @@ export function validateNotFoundHandler(handler) {
  * @param {unknown} handler - Handler function to validate.
  * @throws {ServerError} If the handler is not a function.
  * @throws {ServerError} If the handler does not declare exactly one parameter.
+ *
  * @example
  * ```js
  * assertNotFoundHandler((exchange) => {

@@ -13,6 +13,20 @@
  * @module UUIDV7
  */
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ IMPORT MODULES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // » IMPORT NATIVE NODEJS MODULES
 import { randomBytes } from 'node:crypto';
@@ -42,6 +56,11 @@ const UUIDV7_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[
  * sortable.
  */
 class UUIDV7 {
+  /**
+   * The UUID value.
+   *
+   * @type {string}
+   */
   #uuid;
 
   /**
@@ -235,8 +254,9 @@ class UUIDV7 {
    * timestamp, and a UUID v7 string represents the timestamp encoded in that
    * UUID.
    *
-   * @param {*} value - Value to validate.
-   * @returns {Validation} Validation result.
+   * @param {unknown} value - Value to validate.
+   * @returns {SuccessValidation|FailureValidation<RangeError|TypeError>} Validation result.
+   *
    * @example
    * ```js
    * const result = UUIDV7.validate();
@@ -249,41 +269,27 @@ class UUIDV7 {
 
     if (value instanceof Date) {
       if (Number.isNaN(value.getTime())) {
-        return Validation.failure({
-          error: RangeError,
-          message: 'Invalid timestamp.',
-          code: 'INVALID_TIMESTAMP',
-          custom: false,
-        });
+        return Validation.failure(new RangeError('Invalid timestamp.'));
       }
       return Validation.success();
     }
 
     if (typeof value === 'string') {
       if (!UUIDV7_REGEXP.test(value)) {
-        return Validation.failure({
-          error: RangeError,
-          message: 'Invalid UUID v7.',
-          code: 'INVALID_UUID',
-          custom: false,
-        });
+        return Validation.failure(new RangeError('Invalid UUID v7.'));
       }
       return Validation.success();
     }
 
-    return Validation.failure({
-      error: TypeError,
-      message: 'Timestamp must be a Date, string, or undefined.',
-      code: 'INVALID_TIMESTAMP_SOURCE',
-      custom: false,
-    });
+    return Validation.failure(new TypeError('Timestamp must be a Date, string, or undefined.'));
   }
 
   /**
    * Validates that a value is a valid UUID v7 string.
    *
    * @param {unknown} value - Value to validate.
-   * @returns {Validation} Validation result.
+   * @returns {SuccessValidation|FailureValidation<ReferenceError|RangeError|TypeError>} Validation result.
+   *
    * @example
    * ```js
    * const result = UUIDV7.validateUUIDString('019937f2-1234-7abc-8def-123456789abc');
@@ -291,30 +297,15 @@ class UUIDV7 {
    */
   static validateUUIDString(value) {
     if (value === undefined) {
-      return Validation.failure({
-        error: ReferenceError,
-        message: 'UUID must be a string.',
-        custom: false,
-        code: 'MISSING_UUID',
-      });
+      return Validation.failure(new ReferenceError('UUID must be a string.'));
     }
 
     if (typeof value !== 'string') {
-      return Validation.failure({
-        error: TypeError,
-        message: 'UUID must be a string.',
-        custom: false,
-        code: 'INVALID_UUID_TYPE',
-      });
+      return Validation.failure(new TypeError('UUID must be a string.'));
     }
 
     if (!UUIDV7_REGEXP.test(value)) {
-      return Validation.failure({
-        error: RangeError,
-        message: 'Invalid UUID v7 format.',
-        custom: false,
-        code: 'INVALID_UUID',
-      });
+      return Validation.failure(new RangeError('Invalid UUID v7 format.'));
     }
 
     return Validation.success();
@@ -328,6 +319,7 @@ class UUIDV7 {
    * @param {unknown} value - Value to validate.
    * @throws {TypeError} If the value has an unsupported type.
    * @throws {RangeError} If the value is invalid.
+   *
    * @example
    * ```js
    * UUIDV7.assert(new Date());

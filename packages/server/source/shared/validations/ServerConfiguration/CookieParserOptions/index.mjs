@@ -13,6 +13,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Determines whether a value is a non-null plain object.
@@ -25,6 +39,7 @@ function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates cookie parser options.
  *
@@ -35,7 +50,8 @@ function isPlainObject(value) {
  * 3. `decode`, if present, must be a boolean.
  *
  * @param {unknown} options - Cookie parser options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateCookieParserOptions({ decode: true });
@@ -58,24 +74,22 @@ export function validateCookieParserOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_COOKIE_PARSER_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_COOKIE_PARSER_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('decode' in options) {
     const { decode } = options;
 
     if (typeof decode !== 'boolean') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COOKIE_PARSER_DECODE_TYPE',
-        custom: true,
-        options: { values: { received: typeof decode } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COOKIE_PARSER_DECODE_TYPE', {
+          values: { received: typeof decode },
+        }),
+      );
     }
   }
 
@@ -88,6 +102,7 @@ export function validateCookieParserOptions(options) {
  * @param {unknown} options - Cookie parser options to validate.
  * @throws {ServerConfigurationError} If `options` is not a plain object.
  * @throws {ServerConfigurationError} If `decode` is not a boolean.
+ *
  * @example
  * ```js
  * assertCookieParserOptions({ decode: true });

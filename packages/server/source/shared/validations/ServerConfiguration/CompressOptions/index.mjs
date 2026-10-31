@@ -14,6 +14,20 @@
 import Validation from '#shared/outcome/Validation';
 import ServerConfigurationError from '#shared/errors/ServerConfigurationError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Minimum valid compression level.
@@ -70,6 +84,7 @@ function everyNonEmptyString(values) {
   return values.every(isNonEmptyString);
 }
 
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates compression options.
  *
@@ -82,7 +97,8 @@ function everyNonEmptyString(values) {
  * 5. `types`, if present, must be an array of non-empty strings.
  *
  * @param {unknown} options - Compression options to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerConfigurationError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateCompressOptions({ threshold: 1024, level: 6 });
@@ -105,33 +121,31 @@ export function validateCompressOptions(options) {
   }
 
   if (!isPlainObject(options)) {
-    return Validation.failure({
-      error: ServerConfigurationError,
-      code: 'INVALID_COMPRESS_OPTIONS',
-      custom: true,
-      options: { values: { received: typeof options } },
-    });
+    return Validation.failure(
+      new ServerConfigurationError('INVALID_COMPRESS_OPTIONS', {
+        values: { received: typeof options },
+      }),
+    );
   }
 
   if ('threshold' in options) {
     const { threshold } = options;
 
     if (typeof threshold !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_THRESHOLD_TYPE',
-        custom: true,
-        options: { values: { received: typeof threshold } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_THRESHOLD_TYPE', {
+          values: { received: typeof threshold },
+        }),
+      );
     }
 
     if (!Number.isInteger(threshold) || threshold < 0) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_THRESHOLD_RANGE',
-        custom: true,
-        options: { details: { threshold } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_THRESHOLD_RANGE', {
+          values: { threshold },
+          details: { threshold },
+        }),
+      );
     }
   }
 
@@ -139,21 +153,20 @@ export function validateCompressOptions(options) {
     const { level } = options;
 
     if (typeof level !== 'number') {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_LEVEL_TYPE',
-        custom: true,
-        options: { values: { received: typeof level } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_LEVEL_TYPE', {
+          values: { received: typeof level },
+        }),
+      );
     }
 
     if (!Number.isInteger(level) || level < MIN_LEVEL || level > MAX_LEVEL) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_LEVEL_RANGE',
-        custom: true,
-        options: { details: { level } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_LEVEL_RANGE', {
+          values: { level },
+          details: { level },
+        }),
+      );
     }
   }
 
@@ -161,21 +174,19 @@ export function validateCompressOptions(options) {
     const { types } = options;
 
     if (!Array.isArray(types)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_TYPES_TYPE',
-        custom: true,
-        options: { values: { received: typeof types } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_TYPES_TYPE', {
+          values: { received: typeof types },
+        }),
+      );
     }
 
     if (!everyNonEmptyString(types)) {
-      return Validation.failure({
-        error: ServerConfigurationError,
-        code: 'INVALID_COMPRESS_TYPES_ITEM',
-        custom: true,
-        options: { details: { types } },
-      });
+      return Validation.failure(
+        new ServerConfigurationError('INVALID_COMPRESS_TYPES_ITEM', {
+          details: { types },
+        }),
+      );
     }
   }
 
@@ -190,6 +201,7 @@ export function validateCompressOptions(options) {
  * @throws {ServerConfigurationError} If `threshold` is not a non-negative integer.
  * @throws {ServerConfigurationError} If `level` is not an integer between `-1` and `11`.
  * @throws {ServerConfigurationError} If `types` is not an array of non-empty strings.
+ *
  * @example
  * ```js
  * assertCompressOptions({ threshold: 1024, level: 6 });

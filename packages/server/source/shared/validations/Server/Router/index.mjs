@@ -13,12 +13,27 @@ import { ROUTER_BRAND } from '#shared/constants/symbols/brands';
 import Validation from '#shared/outcome/Validation';
 import ServerError from '#shared/errors/ServerError';
 
-// ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
+// ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Validates that a value implements the Router contract.
  *
  * @param {unknown} value - Value to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<ServerError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateRouter(router);
@@ -29,21 +44,15 @@ import ServerError from '#shared/errors/ServerError';
  */
 export function validateRouter(value) {
   if (value === null || typeof value !== 'object') {
-    return Validation.failure({
-      error: ServerError,
-      message: `Expected a Router instance, received: ${value === null ? 'null' : typeof value}.`,
-      code: 'INVALID_ROUTER_TYPE',
-      custom: true,
-    });
+    return Validation.failure(
+      new ServerError('INVALID_ROUTER_TYPE', {
+        values: { received: value === null ? 'null' : typeof value },
+      }),
+    );
   }
 
   if (Reflect.get(value, ROUTER_BRAND) !== true) {
-    return Validation.failure({
-      error: ServerError,
-      message: 'Expected a Router instance.',
-      code: 'INVALID_ROUTER_INSTANCE',
-      custom: true,
-    });
+    return Validation.failure(new ServerError('INVALID_ROUTER_INSTANCE'));
   }
 
   return Validation.success();
@@ -54,6 +63,7 @@ export function validateRouter(value) {
  *
  * @param {unknown} value - Value to assert.
  * @throws {ServerError} If the value does not implement the Router contract.
+ *
  * @example
  * ```js
  * assertRouter(router);

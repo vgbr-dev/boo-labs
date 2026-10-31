@@ -14,11 +14,24 @@
 import Validation from '#shared/outcome/Validation';
 import PathnamePatternError from '#shared/errors/PathnamePatternError';
 
+// ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * A successful {@link Validation} instance.
+ *
+ * @typedef {import('#shared/outcome/Validation').SuccessValidation} SuccessValidation
+ */
+
+/**
+ * A failed {@link Validation} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Validation').FailureValidation<E>} FailureValidation
+ */
+
 // ━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Maximum number of characters allowed in a pathname pattern.
  *
- * @private
  * @type {number}
  */
 const MAX_PATTERN_LENGTH = 512;
@@ -29,7 +42,6 @@ const MAX_PATTERN_LENGTH = 512;
  * Parameter names must begin with a letter or underscore and may contain
  * letters, digits, and underscores.
  *
- * @private
  * @type {string}
  */
 const PARAM_NAME = String.raw`[A-Za-z_][A-Za-z0-9_]*`;
@@ -38,7 +50,6 @@ const PARAM_NAME = String.raw`[A-Za-z_][A-Za-z0-9_]*`;
  * Regular expression source for a literal character allowed inside a pathname
  * segment.
  *
- * @private
  * @type {string}
  */
 const LITERAL_CHAR = String.raw`[A-Za-z0-9._~!$&'()+,;=@-]`;
@@ -49,7 +60,6 @@ const LITERAL_CHAR = String.raw`[A-Za-z0-9._~!$&'()+,;=@-]`;
  *
  * Supported forms are `:name` and `{name}`.
  *
- * @private
  * @type {string}
  */
 const PARAM_SEGMENT = String.raw`(?::${PARAM_NAME}|\{${PARAM_NAME}\})`;
@@ -111,7 +121,8 @@ const PARAMETER_PATTERN_REGEXP = /:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0
  *
  * @private
  * @param {string} pathnamePattern - Pathname pattern to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<PathnamePatternError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validateUniqueParamNames('/users/:id/posts/{postId}');
@@ -119,6 +130,7 @@ const PARAMETER_PATTERN_REGEXP = /:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0
  * console.log(validation.ok);
  * // => true
  * ```
+ *
  * @example
  * ```js
  * const validation = validateUniqueParamNames('/users/:id/posts/{id}');
@@ -134,15 +146,12 @@ function validateUniqueParamNames(pathnamePattern) {
     const name = match[1] ?? match[2];
 
     if (names.has(name)) {
-      return Validation.failure({
-        error: PathnamePatternError,
-        code: 'DUPLICATE_PARAMETER_NAME',
-        custom: true,
-        options: {
+      return Validation.failure(
+        new PathnamePatternError('DUPLICATE_PARAMETER_NAME', {
           values: { name },
           details: { pathnamePattern },
-        },
-      });
+        }),
+      );
     }
 
     names.add(name);
@@ -165,7 +174,8 @@ function validateUniqueParamNames(pathnamePattern) {
  * 5. Parameter names must be unique.
  *
  * @param {unknown} pathnamePattern - Pathname pattern to validate.
- * @returns {Validation} Validation result.
+ * @returns {SuccessValidation|FailureValidation<PathnamePatternError>} Validation result.
+ *
  * @example
  * ```js
  * const validation = validatePathnamePattern('/users/:id');
@@ -184,45 +194,32 @@ function validateUniqueParamNames(pathnamePattern) {
  */
 export function validatePathnamePattern(pathnamePattern) {
   if (typeof pathnamePattern !== 'string') {
-    return Validation.failure({
-      error: PathnamePatternError,
-      code: 'INVALID_PATTERN_TYPE',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new PathnamePatternError('INVALID_PATTERN_TYPE', {
         values: { expected: 'string', received: typeof pathnamePattern },
-      },
-    });
+      }),
+    );
   }
 
   if (pathnamePattern.length === 0) {
-    return Validation.failure({
-      error: PathnamePatternError,
-      code: 'EMPTY_PATTERN',
-      custom: true,
-    });
+    return Validation.failure(new PathnamePatternError('EMPTY_PATTERN'));
   }
 
   if (pathnamePattern.length > MAX_PATTERN_LENGTH) {
-    return Validation.failure({
-      error: PathnamePatternError,
-      code: 'PATTERN_TOO_LONG',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new PathnamePatternError('PATTERN_TOO_LONG', {
         values: { maxLength: MAX_PATTERN_LENGTH, actualLength: pathnamePattern.length },
-      },
-    });
+      }),
+    );
   }
 
   if (!PATHNAME_PATTERN_REGEXP.test(pathnamePattern)) {
-    return Validation.failure({
-      error: PathnamePatternError,
-      code: 'INVALID_PATHNAME_PATTERN',
-      custom: true,
-      options: {
+    return Validation.failure(
+      new PathnamePatternError('INVALID_PATHNAME_PATTERN', {
         values: { pathnamePattern },
         details: { constraint: 'Must be * or start with / and contain valid segments' },
-      },
-    });
+      }),
+    );
   }
 
   return validateUniqueParamNames(pathnamePattern);
@@ -237,6 +234,7 @@ export function validatePathnamePattern(pathnamePattern) {
  * @throws {PathnamePatternError} If the pathname pattern exceeds the maximum length.
  * @throws {PathnamePatternError} If the pathname pattern syntax is invalid.
  * @throws {PathnamePatternError} If the pathname pattern has duplicate parameter names.
+ *
  * @example
  * ```js
  * assertPathnamePattern('/users/:id');
@@ -250,6 +248,7 @@ export function validatePathnamePattern(pathnamePattern) {
  */
 export function assertPathnamePattern(pathnamePattern) {
   const validation = validatePathnamePattern(pathnamePattern);
+
   if (!validation.ok) {
     throw validation.error;
   }
