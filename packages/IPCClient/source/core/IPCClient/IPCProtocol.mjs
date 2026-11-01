@@ -18,6 +18,20 @@ import Result from '#shared/outcome/Result';
 
 // ━━ TYPE DEFINITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
+ * A successful {@link Result} instance.
+ *
+ * @template T
+ * @typedef {import('#shared/outcome/Result').SuccessResult<T>} SuccessResult
+ */
+
+/**
+ * A failed {@link Result} instance.
+ *
+ * @template {Error} E
+ * @typedef {import('#shared/outcome/Result').FailureResult<E>} FailureResult
+ */
+
+/**
  * Represents an IPC invocation request.
  *
  * An invocation expects a matching response carrying the same `id`.
@@ -103,6 +117,19 @@ const IPC_BAD_MESSAGE = 'IPC_BAD_MESSAGE';
  */
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Attaches a machine-readable code to an Error instance.
+ *
+ * @private
+ * @template {Error} E
+ * @param {E} error - Error instance to annotate.
+ * @param {string} code - Machine-readable error code.
+ * @returns {E & { code: string }} The annotated error.
+ */
+function withCode(error, code) {
+  return Object.assign(error, { code });
 }
 
 // ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -334,25 +361,19 @@ class IPCProtocol {
    * a failure describing the first structural violation encountered.
    *
    * @param {unknown} message - Parsed IPC payload.
-   * @returns {Result<IPCRequest>} Successful result containing the normalized request, or a failure describing the validation error.
+   * @returns {SuccessResult<IPCRequest>|FailureResult<TypeError|ReferenceError>} Successful result containing the normalized request, or a failure describing the validation error.
    */
   #ensureRequest(message) {
     if (!isPlainObject(message)) {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC message must be a plain object.',
-        code: 'IPC_INVALID_MESSAGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC message must be a plain object.'), 'IPC_INVALID_MESSAGE'),
+      );
     }
 
     if (!('type' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC message requires a "type" property.',
-        code: 'IPC_MISSING_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new ReferenceError('IPC message requires a "type" property.'), 'IPC_MISSING_TYPE'),
+      );
     }
 
     if (message.type === 'invoke') {
@@ -363,12 +384,9 @@ class IPCProtocol {
       return this.#ensureEventRequest(message);
     }
 
-    return Result.failure({
-      error: TypeError,
-      message: 'IPC message type must be "invoke" or "event".',
-      code: 'IPC_INVALID_TYPE',
-      custom: false,
-    });
+    return Result.failure(
+      withCode(new TypeError('IPC message type must be "invoke" or "event".'), 'IPC_INVALID_TYPE'),
+    );
   }
 
   /**
@@ -378,25 +396,19 @@ class IPCProtocol {
    * based on the message `type`.
    *
    * @param {unknown} message - Parsed IPC payload.
-   * @returns {Result<IPCMessage>} Successful result containing the normalized message, or a failure describing the validation error.
+   * @returns {SuccessResult<IPCMessage>|FailureResult<TypeError|ReferenceError>} Successful result containing the normalized message, or a failure describing the validation error.
    */
   #ensureMessage(message) {
     if (!isPlainObject(message)) {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC message must be a plain object.',
-        code: 'IPC_INVALID_MESSAGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC message must be a plain object.'), 'IPC_INVALID_MESSAGE'),
+      );
     }
 
     if (!('type' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC message requires a "type" property.',
-        code: 'IPC_MISSING_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new ReferenceError('IPC message requires a "type" property.'), 'IPC_MISSING_TYPE'),
+      );
     }
 
     if (message.type === 'invoke') {
@@ -411,73 +423,64 @@ class IPCProtocol {
       return this.#ensureResponse(message);
     }
 
-    return Result.failure({
-      error: TypeError,
-      message: 'IPC message type must be "invoke", "event" or "response".',
-      code: 'IPC_INVALID_TYPE',
-      custom: false,
-    });
+    return Result.failure(
+      withCode(
+        new TypeError('IPC message type must be "invoke", "event" or "response".'),
+        'IPC_INVALID_TYPE',
+      ),
+    );
   }
 
   /**
    * Ensures a parsed IPC payload is a valid invocation request.
    *
    * @param {Record<string, unknown>} message - Parsed IPC payload.
-   * @returns {Result<IPCInvokeRequest>} Successful result containing the normalized request, or a failure describing the validation error.
+   * @returns {SuccessResult<IPCInvokeRequest>|FailureResult<TypeError|ReferenceError|RangeError>} Successful result containing the normalized request, or a failure describing the validation error.
    */
   #ensureInvokeRequest(message) {
     if (!('channel' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC message requires a "channel" property.',
-        code: 'IPC_MISSING_CHANNEL',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new ReferenceError('IPC message requires a "channel" property.'),
+          'IPC_MISSING_CHANNEL',
+        ),
+      );
     }
 
     if (typeof message.channel !== 'string') {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC channel must be a string.',
-        code: 'IPC_INVALID_CHANNEL_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC channel must be a string.'), 'IPC_INVALID_CHANNEL_TYPE'),
+      );
     }
 
     if (message.channel.trim().length === 0) {
-      return Result.failure({
-        error: RangeError,
-        message: 'IPC channel must be a non-empty string.',
-        code: 'IPC_INVALID_CHANNEL_RANGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new RangeError('IPC channel must be a non-empty string.'),
+          'IPC_INVALID_CHANNEL_RANGE',
+        ),
+      );
     }
 
     if (!('id' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC invocation requires an "id" property.',
-        code: 'IPC_MISSING_ID',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new ReferenceError('IPC invocation requires an "id" property.'), 'IPC_MISSING_ID'),
+      );
     }
 
     if (typeof message.id !== 'string') {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC invocation id must be a string.',
-        code: 'IPC_INVALID_ID_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC invocation id must be a string.'), 'IPC_INVALID_ID_TYPE'),
+      );
     }
 
     if (message.id.trim().length === 0) {
-      return Result.failure({
-        error: RangeError,
-        message: 'IPC invocation id must be a non-empty string.',
-        code: 'IPC_INVALID_ID_RANGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new RangeError('IPC invocation id must be a non-empty string.'),
+          'IPC_INVALID_ID_RANGE',
+        ),
+      );
     }
 
     return Result.success({
@@ -492,34 +495,31 @@ class IPCProtocol {
    * Ensures a parsed IPC payload is a valid event request.
    *
    * @param {Record<string, unknown>} message - Parsed IPC payload.
-   * @returns {Result<IPCEventRequest>} Successful result containing the normalized request, or a failure describing the validation error.
+   * @returns {SuccessResult<IPCEventRequest>|FailureResult<TypeError|ReferenceError|RangeError>} Successful result containing the normalized request, or a failure describing the validation error.
    */
   #ensureEventRequest(message) {
     if (!('channel' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC message requires a "channel" property.',
-        code: 'IPC_MISSING_CHANNEL',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new ReferenceError('IPC message requires a "channel" property.'),
+          'IPC_MISSING_CHANNEL',
+        ),
+      );
     }
 
     if (typeof message.channel !== 'string') {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC channel must be a string.',
-        code: 'IPC_INVALID_CHANNEL_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC channel must be a string.'), 'IPC_INVALID_CHANNEL_TYPE'),
+      );
     }
 
     if (message.channel.trim().length === 0) {
-      return Result.failure({
-        error: RangeError,
-        message: 'IPC channel must be a non-empty string.',
-        code: 'IPC_INVALID_CHANNEL_RANGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new RangeError('IPC channel must be a non-empty string.'),
+          'IPC_INVALID_CHANNEL_RANGE',
+        ),
+      );
     }
 
     return Result.success({
@@ -537,76 +537,67 @@ class IPCProtocol {
    * `message` properties.
    *
    * @param {Record<string, unknown>} message - Parsed IPC payload.
-   * @returns {Result<IPCResponse>} Successful result containing the normalized response, or a failure describing the validation error.
+   * @returns {SuccessResult<IPCResponse>|FailureResult<TypeError|ReferenceError|RangeError>} Successful result containing the normalized response, or a failure describing the validation error.
    */
   #ensureResponse(message) {
     if (!('id' in message)) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC response requires an "id" property.',
-        code: 'IPC_MISSING_ID',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new ReferenceError('IPC response requires an "id" property.'), 'IPC_MISSING_ID'),
+      );
     }
 
     if (typeof message.id !== 'string') {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC response id must be a string.',
-        code: 'IPC_INVALID_ID_TYPE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(new TypeError('IPC response id must be a string.'), 'IPC_INVALID_ID_TYPE'),
+      );
     }
 
     if (message.id.trim().length === 0) {
-      return Result.failure({
-        error: RangeError,
-        message: 'IPC response id must be a non-empty string.',
-        code: 'IPC_INVALID_ID_RANGE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new RangeError('IPC response id must be a non-empty string.'),
+          'IPC_INVALID_ID_RANGE',
+        ),
+      );
     }
 
     const hasResult = 'result' in message;
     const hasError = 'error' in message;
 
     if (hasResult && hasError) {
-      return Result.failure({
-        error: TypeError,
-        message: 'IPC response cannot contain both "result" and "error".',
-        code: 'IPC_INVALID_RESPONSE',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new TypeError('IPC response cannot contain both "result" and "error".'),
+          'IPC_INVALID_RESPONSE',
+        ),
+      );
     }
 
     if (!hasResult && !hasError) {
-      return Result.failure({
-        error: ReferenceError,
-        message: 'IPC response requires either "result" or "error".',
-        code: 'IPC_MISSING_RESULT_OR_ERROR',
-        custom: false,
-      });
+      return Result.failure(
+        withCode(
+          new ReferenceError('IPC response requires either "result" or "error".'),
+          'IPC_MISSING_RESULT_OR_ERROR',
+        ),
+      );
     }
 
     if (hasError) {
       const error = message.error;
 
       if (!isPlainObject(error)) {
-        return Result.failure({
-          error: TypeError,
-          message: 'IPC response error must be an object.',
-          code: 'IPC_INVALID_ERROR',
-          custom: false,
-        });
+        return Result.failure(
+          withCode(new TypeError('IPC response error must be an object.'), 'IPC_INVALID_ERROR'),
+        );
       }
 
       if (typeof error.code !== 'string' || typeof error.message !== 'string') {
-        return Result.failure({
-          error: TypeError,
-          message: 'IPC response error must be an object with string "code" and "message".',
-          code: 'IPC_INVALID_ERROR',
-          custom: false,
-        });
+        return Result.failure(
+          withCode(
+            new TypeError('IPC response error must be an object with string "code" and "message".'),
+            'IPC_INVALID_ERROR',
+          ),
+        );
       }
 
       return Result.success({
