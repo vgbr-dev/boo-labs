@@ -143,24 +143,23 @@ class RouterSystem {
   registerMountEntry(basePathnamePattern, router) {
     const { middlewares, layersOptions } = router.compose();
 
-    const options = [
-      ...middlewares.map(middleware => ({
-        method: undefined,
-        pathnamePattern: basePathnamePattern,
-        middleware,
-      })),
-      ...layersOptions.map(({ method, pathnamePattern, middleware }) => ({
-        method,
-        pathnamePattern: `${basePathnamePattern}${pathnamePattern}`,
-        middleware,
-      })),
-    ];
+    const mountedMiddlewares = middlewares.map(middleware => ({
+      method: undefined,
+      pathnamePattern: `${basePathnamePattern}{/*}?`,
+      middleware,
+    }));
+
+    const mountedLayers = layersOptions.map(({ method, pathnamePattern, middleware }) => ({
+      method,
+      pathnamePattern: `${basePathnamePattern}${pathnamePattern}`,
+      middleware,
+    }));
 
     /** @type {RouteRegistrations} */
-    const routes = options.map(({ method, pathnamePattern }) => [method, pathnamePattern]);
+    const routes = mountedLayers.map(({ method, pathnamePattern }) => [method, pathnamePattern]);
 
     this.#registerRouteBatch(routes);
-    this.#registerLayerBatch(options);
+    this.#registerLayerBatch([...mountedMiddlewares, ...mountedLayers]);
   }
 
   /**

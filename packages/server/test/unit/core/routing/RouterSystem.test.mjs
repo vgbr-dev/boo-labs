@@ -406,11 +406,29 @@ suite('RouterSystem', () => {
 
       await system.executePipeline(exchange, async () => {});
 
-      // El middleware global del router se registra con `pathnamePattern: '/api'`
-      // (exacto), así que NO se ejecuta para `/api/users`.
-      assert.strictEqual(globalMw.calls, 0);
+      assert.strictEqual(globalMw.calls, 1);
       assert.strictEqual(routeMw.calls, 1);
     });
+
+    await sub.test(
+      'should not execute router global middlewares outside the base pattern',
+      async () => {
+        const system = new RouterSystem();
+        const router = new Router();
+        const globalMw = makeMiddleware();
+
+        router.use(globalMw.middleware);
+
+        system.registerMountEntry('/api', router);
+
+        await system.executePipeline(
+          makeExchange({ method: 'GET', pathname: '/apix/users' }),
+          async () => {},
+        );
+
+        assert.strictEqual(globalMw.calls, 0);
+      },
+    );
 
     await sub.test(
       'should execute router global middlewares for the exact base pathname',
