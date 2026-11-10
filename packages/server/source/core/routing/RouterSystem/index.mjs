@@ -60,6 +60,73 @@ import ExchangeLayer from '#routing/ExchangeLayer';
  * @typedef {ExchangeLayerOptions[]} ExchangeLayersOptions
  */
 
+// ━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * Joins a mount base pathname with a child route pathname pattern.
+ *
+ * Avoids the naive string concatenation that turns
+ * `/api/movements` + `/` into `/api/movements/`, which does not match
+ * requests to `/api/movements` under `URLPattern`.
+ *
+ * @param {string} base - Mount base, e.g. `/api/movements`.
+ * @param {string} path - Child pattern, e.g. `/` or `/:id`.
+ * @returns {string} Combined pathname pattern.
+ *
+ * @example
+ * ```js
+ * joinPathnamePattern('/api/movements', '/');
+ * // => '/api/movements'
+ *
+ * joinPathnamePattern('/api/movements', '/:id');
+ * // => '/api/movements/:id'
+ *
+ * joinPathnamePattern('/api/movements/', '/');
+ * // => '/api/movements'
+ * ```
+ */
+function joinPathnamePattern(base, path) {
+  // Child root of the mount: keep the base without a trailing slash.
+  if (path === '/') {
+    if (base === '/') {
+      return '/';
+    }
+
+    return base.replace(/\/+$/, '') || '/';
+  }
+
+  const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+/**
+ * Builds the pathname pattern used for router-level middleware after a mount.
+ *
+ * Matches the exact base and any subpath under it.
+ *
+ * @param {string} base - Mount base pathname pattern.
+ * @returns {string} Pattern with an optional trailing path segment group.
+ *
+ * @example
+ * ```js
+ * mountMiddlewarePattern('/api/movements');
+ * // => '/api/movements{/*}?'
+ *
+ * mountMiddlewarePattern('/');
+ * // => '{/*}?'
+ * ```
+ */
+function mountMiddlewarePattern(base) {
+  const normalizedBase = base === '/' ? '' : base.replace(/\/+$/, '');
+
+  if (normalizedBase === '') {
+    return '{/*}?';
+  }
+
+  return `${normalizedBase}{/*}?`;
+}
+
 // ━━ MODULE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /**
  * Coordinates route registration and layer execution.
@@ -81,8 +148,8 @@ class RouterSystem {
    *
    * @type {RouteRegister}
    */
-
   #routes = new RouteRegister();
+
   /**
    * Registers multiple exchange layers from layer options.
    *
@@ -131,13 +198,19 @@ class RouterSystem {
   /**
    * Registers a mounted router by prefixing its routes and middlewares with a base pathname pattern.
    *
+   * Child route `/` is mapped to the exact base (no trailing slash). Nested
+   * patterns such as `/:id` are joined as `${base}/:id`.
+   *
    * @param {string} basePathnamePattern - The base URL pathname pattern to prefix.
    * @param {Router} router - The router instance to mount (must implement a `compose()` method).
    * @example
    * ```js
    * const userRouter = new Router();
    * userRouter.get('/', getUsers);
+   * userRouter.get('/:id', getUser);
    * routerSystem.registerMountEntry('/api/users', userRouter);
+   * // GET /api/users     → getUsers
+   * // GET /api/users/42  → getUser
    * ```
    */
   registerMountEntry(basePathnamePattern, router) {
@@ -145,13 +218,13 @@ class RouterSystem {
 
     const mountedMiddlewares = middlewares.map(middleware => ({
       method: undefined,
-      pathnamePattern: `${basePathnamePattern}{/*}?`,
+      pathnamePattern: mountMiddlewarePattern(basePathnamePattern),
       middleware,
     }));
 
     const mountedLayers = layersOptions.map(({ method, pathnamePattern, middleware }) => ({
       method,
-      pathnamePattern: `${basePathnamePattern}${pathnamePattern}`,
+      pathnamePattern: joinPathnamePattern(basePathnamePattern, pathnamePattern),
       middleware,
     }));
 
