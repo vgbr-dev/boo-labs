@@ -1,6 +1,6 @@
 {
   "name": "@boo-labs/server",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A zero-dependency, frameworkless HTTP server for Node.js, built around Clean Architecture principles.",
   "keywords": [
     "http-server",
