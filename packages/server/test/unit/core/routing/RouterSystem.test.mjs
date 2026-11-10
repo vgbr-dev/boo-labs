@@ -348,6 +348,45 @@ suite('RouterSystem', () => {
       assert.ok(captured.allowHeader.includes('GET'));
       assert.ok(captured.allowHeader.includes('OPTIONS'));
     });
+    await sub.test(
+      'should mount router.get("/") as the exact base pathname (no trailing slash)',
+      async () => {
+        const system = new RouterSystem();
+        const router = new Router();
+        const mw = makeMiddleware();
+
+        router.get('/', mw.middleware);
+        system.registerMountEntry('/api/movements', router);
+
+        await system.executePipeline(
+          makeExchange({ method: 'GET', pathname: '/api/movements' }),
+          async () => {},
+        );
+        assert.strictEqual(mw.calls, 1);
+        let notFound = false;
+        await system.executePipeline(
+          makeExchange({ method: 'GET', pathname: '/api/movements/' }),
+          async () => {
+            notFound = true;
+          },
+        );
+      },
+    );
+
+    await sub.test('should mount child param routes under the base', async () => {
+      const system = new RouterSystem();
+      const router = new Router();
+      const mw = makeMiddleware();
+
+      router.get('/:id', mw.middleware);
+      system.registerMountEntry('/api/movements', router);
+
+      await system.executePipeline(
+        makeExchange({ method: 'GET', pathname: '/api/movements/42' }),
+        async () => {},
+      );
+      assert.strictEqual(mw.calls, 1);
+    });
   });
 
   // ───────────────────────────────────────────────────────────────────────────
